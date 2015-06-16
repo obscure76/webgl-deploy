@@ -324,13 +324,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       };
       
-      var autoRotateEl = document.getElementById("rot");
+      /*var autoRotateEl = document.getElementById("rot");
       autoRotateEl.addEventListener('click', function() {
         if(controls.autoRotateSpeed == 0.0)
           controls.autoRotateSpeed = 3.0;
         else
           controls.autoRotateSpeed = 0.0;
-      });
+      });*/
 
       var rangeEL = document.getElementById("myRange");
       rangeEL.addEventListener('change', function() {
@@ -340,8 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
       container = document.createElement('div');
       document.body.appendChild(container);
       // camera
-      camera = new THREE.PerspectiveCamera(75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 100000);
-      camera.position.z = 75;
+      camera = new THREE.PerspectiveCamera(103, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 100000);
+      camera.position.z = 120;
+      camera.focusout;
 
       //scene
       scene = new THREE.Scene();
@@ -352,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // more lights
       var directionalLight = new THREE.DirectionalLight(0xaaeedd);
-      directionalLight.position.set(0, -70, 100).normalize();
+      directionalLight.position.set(0, -120, 100).normalize();
       scene.add(directionalLight);
 
       // renderer
