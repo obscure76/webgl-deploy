@@ -18,7 +18,7 @@ OrbitControls = function(object, domElement) {
   this.userRotateSpeed = 1.0;
 
   this.autoRotate = false;
-  this.autoRotateSpeed = 5.0; // 30 seconds per round when fps is 60
+  this.autoRotateSpeed = 0.0; // 30 seconds per round when fps is 60
 
   // internals
 
@@ -43,6 +43,7 @@ OrbitControls = function(object, domElement) {
 
   var STATE = { NONE : -1, ROTATE : 0, ZOOM : 1 };
   var state = STATE.NONE;
+  var ongoingTouches = new Array();
 
   // events
 
@@ -203,6 +204,13 @@ OrbitControls = function(object, domElement) {
       zoomStart.copy(zoomEnd);
     }
   }
+    
+  function rotateSpeedControl() {
+      if(this.autoRotateSpeed == 0.0)
+          this.autoRotateSpeed = 3.0;
+      else
+          this.autoRotateSpeed = 0.0;
+  }
 
   function onMouseUp(event) {
     if (!scope.userRotate) return;
@@ -219,6 +227,17 @@ OrbitControls = function(object, domElement) {
     document.exitPointerLock();
   }
 
+  function touchHandler(event) {
+    var touches = event.changedTouches;
+
+    for(var i=0; i < event.changedTouches.length; i++) {
+        var touchId = event.changedTouches[i].identifier;
+        var x       = event.changedTouches[i].pageX;
+        var y       = event.changedTouches[i].pageY;
+    }
+
+  }
+    
   function onMouseWheel(event) {
     if (!scope.userZoom) return;
 
@@ -228,10 +247,47 @@ OrbitControls = function(object, domElement) {
       scope.zoomIn();
     }
   }
+  
+  function handleStart(event) {
+      event.preventDefault();
+      var el =  this.domElement;
+      var ctx = el.getContext("2D");
+      var touches = event.changedTouches;
+      for (var i=0; i < touches.length; i++) {
+        log("touchstart:"+i+"...");
+        ongoingTouches.push(copyTouch(touches[i]));
+        var color = colorForTouch(touches[i]);
+        ctx.beginPath();
+        ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0,2*Math.PI, false);  // a circle at the start
+        ctx.fillStyle = color;
+        ctx.fill();
+        log("touchstart:"+i+".");
+    }
+  }
+    
+  function handleEnd(event) {
+  }
+  
+  function handleStart(event) {
+  }
+    
+  function handleEnd(event) {
+  } 
+  
+  function handleCancel(event) {
+  }
+
+  function handleMove(event) {
+  }
 
   this.domElement.addEventListener('contextmenu', function(event) { event.preventDefault(); }, false);
   this.domElement.addEventListener('mousedown', onMouseDown, false);
   this.domElement.addEventListener('mousewheel', onMouseWheel, false);
+  this.domElement.addEventListener("touchstart", handleStart, false);
+  this.domElement.addEventListener("touchend", handleEnd, false);
+  this.domElement.addEventListener("touchcancel", handleCancel, false);
+  this.domElement.addEventListener("touchleave", handleEnd, false);
+  this.domElement.addEventListener("touchmove", handleMove, false);
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -241,7 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var SCREEN_WIDTH = window.innerWidth;
     var SCREEN_HEIGHT = window.innerHeight;
     var FLOOR = 0;
-    console.log(window.innerHeight, window.innerWidth);
     var container;
 
     //var camera, scene, controls;
@@ -260,7 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
 
       var closeEl=document.querySelector(".close");
-      console.log(closeEl);
       if (closeEl) {
         closeEl.addEventListener('click', function() {
           window.close();
@@ -269,10 +323,22 @@ document.addEventListener('DOMContentLoaded', function() {
           e.stopPropagation();
         });
       };
+      
+      var autoRotateEl = document.getElementById("rot");
+      autoRotateEl.addEventListener('click', function() {
+        if(controls.autoRotateSpeed == 0.0)
+          controls.autoRotateSpeed = 3.0;
+        else
+          controls.autoRotateSpeed = 0.0;
+      });
 
+      var rangeEL = document.getElementById("myRange");
+      rangeEL.addEventListener('change', function() {
+          console.log(rangeEL.value);
+          controls.autoRotateSpeed = rangeEL.value;
+      });
       container = document.createElement('div');
       document.body.appendChild(container);
-
       // camera
       camera = new THREE.PerspectiveCamera(75, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 100000);
       camera.position.z = 75;
@@ -301,6 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       controls = new OrbitControls(camera, container);
       controls.autoRotate = true;
+      rangeEL.value = controls.autoRotateSpeed = 3.0;
     }
 
     function createScene(geometry) {
